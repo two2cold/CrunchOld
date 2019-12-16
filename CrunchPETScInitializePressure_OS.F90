@@ -1,0 +1,105 @@
+!! CrunchTope 
+!! Copyright (c) 2016, Carl Steefel
+!! Copyright (c) 2016, The Regents of the University of California, 
+!! through Lawrence Berkeley National Laboratory (subject to 
+!! receipt of any required approvals from the U.S. Dept. of Energy).  
+!! All rights reserved.
+
+!! Redistribution and use in source and binary forms, with or without
+!! modification, are permitted provided that the following conditions are
+!! met: 
+
+!! (1) Redistributions of source code must retain the above copyright
+!! notice, this list of conditions and the following disclaimer.
+
+!! (2) Redistributions in binary form must reproduce the above copyright
+!! notice, this list of conditions and the following disclaimer in the
+!! documentation and/or other materials provided with the distribution.
+
+!! (3) Neither the name of the University of California, Lawrence
+!! Berkeley National Laboratory, U.S. Dept. of Energy nor the names of    
+!! its contributors may be used to endorse or promote products derived
+!! from this software without specific prior written permission.
+
+!! THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+!! "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+!! LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+!! A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+!! OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+!! SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+!! LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+!! DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+!! THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+!! (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+!! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE   
+    
+subroutine CrunchPETScInitializePressure(nx,ny,nz,userP,ierr,xvecP,bvecP,amatP)
+USE crunchtype
+USE flow, ONLY:  XvecCrunchP, BvecCrunchP
+
+IMPLICIT NONE
+
+#include "petsc/finclude/petsc.h"
+
+!  External variables and arrays
+
+INTEGER(I4B), INTENT(IN)                                              :: nx
+INTEGER(I4B), INTENT(IN)                                              :: ny
+INTEGER(I4B), INTENT(IN)                                              :: nz
+INTEGER(I4B), INTENT(IN OUT)                                          :: ierr
+
+!  Internal variables and arrays
+
+INTEGER(I4B)                                                          :: nxyz
+INTEGER(I4B)                                                          :: linefil
+
+! ******************** PETSC declarations ********************************
+PetscFortranAddr     userP(*)
+Mat                  amatP
+Vec                  bvecP,xvecP
+!!SLES                 sles
+PC                   pc
+KSP                  ksp
+!!Scalar               zeroPetsc
+! ************************end PETSc declarations of PETSc variables ******
+
+nxyz = nx*ny*nz
+
+IF (ALLOCATED(XvecCrunchP)) THEN
+  DEALLOCATE(XvecCrunchP)
+END IF
+ALLOCATE(XvecCrunchP(0:nxyz-1))
+IF (ALLOCATED(BvecCrunchP)) THEN
+  DEALLOCATE(BvecCrunchP)
+END IF
+ALLOCATE(BvecCrunchP(0:nxyz-1))
+
+IF (ny == 1 .AND. nz == 1) THEN       !  1D problem (assumes an X coordinate direction
+  linefil = 3
+ELSE
+  IF (ny > 1 .AND. nz > 1) THEN      !  3D problem
+    linefil = 7
+  ELSE
+    linefil = 5
+  END IF
+END IF
+
+call MatCreateSeqAIJ(PETSC_COMM_SELF,nxyz,nxyz,linefil,PETSC_NULL_INTEGER,amatP,ierr)
+!!call MatSetOption(amatP,MAT_COLUMN_ORIENTED,ierr)
+call MatSetOption(amatP,MAT_ROW_ORIENTED,PETSC_FALSE,ierr)
+call VecCreateSeqWithArray(PETSC_COMM_SELF,1,nxyz,BvecCrunchP,bvecP,ierr)
+call VecCreateSeqWithArray(PETSC_COMM_SELF,1,nxyz,XvecCrunchP,xvecP,ierr)
+call KSPCreate(PETSC_COMM_SELF,ksp,ierr)
+call KSPSetFromOptions(ksp,ierr)
+call KSPGetPC(ksp,pc,ierr)
+!!call SLESGetKSP(sles,ksp,ierr)
+
+userP(1) = amatP
+userP(2) = bvecP
+userP(3) = xvecP
+!!userP(4) = sles
+userP(5) = pc
+userP(6) = ksp
+
+RETURN
+END subroutine CrunchPETScInitializePressure
