@@ -116,8 +116,8 @@ UliGas = 1.0d0
 QuirkGas = 0.0d0
 zero = 0.0d0
 
-  UliGas = 7.0d0/3.0d0
-  QuirkGas = 1.0d0/3.0d0
+  UliGas = 0.0d0/3.0d0
+  QuirkGas = 0.0d0/3.0d0
 
 jz = 1
 DO jy = 1,ny

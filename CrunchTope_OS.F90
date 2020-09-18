@@ -1431,11 +1431,11 @@ DO WHILE (nn <= nend)
       END DO
     END DO
 
-   CALL xmass(nx,ny,nz,ncomp,nspec)
-   xgramOld = xgram
-   IF (H2Opresent) THEN
+    CALL xmass(nx,ny,nz,ncomp,nspec)
+    xgramOld = xgram
+    IF (H2Opresent) THEN
 !!     CALL WaterReacted(nx,ny,nz)
-   END IF
+    END IF
 
     DO i = 1,ncomp
 
@@ -1823,28 +1823,12 @@ DO WHILE (nn <= nend)
       END IF
     END IF
 
-    !!Yuchen make changes
-    !!WRITE(*,*)
-    !!WRITE(*,*) ' isaturate = ', isaturate
-    !!WRITE(*,*)
-    !!READ(*,*)
-    !!STOP
-    !!End change
-
     IF (isaturate == 1) THEN
       IF (cylindrical) THEN
 !!        CALL gasdiffCylinder(nx,ny,nz)
         CALL gascoeffCylinder(nx,ny,nz)
       ELSE
         CALL gasdiff(nx,ny,nz)
-
-        !!Yuchen make changes
-        !!WRITE(*,*)
-        !!WRITE(*,*) ' testtesttest '
-        !!WRITE(*,*)
-        !!READ(*,*)
-        !!STOP
-        !!End change
 
       END IF
     END IF

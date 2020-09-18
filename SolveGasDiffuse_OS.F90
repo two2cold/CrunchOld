@@ -1,13 +1,13 @@
-!! CrunchTope 
+!! CrunchTope
 !! Copyright (c) 2016, Carl Steefel
-!! Copyright (c) 2016, The Regents of the University of California, 
-!! through Lawrence Berkeley National Laboratory (subject to 
-!! receipt of any required approvals from the U.S. Dept. of Energy).  
+!! Copyright (c) 2016, The Regents of the University of California,
+!! through Lawrence Berkeley National Laboratory (subject to
+!! receipt of any required approvals from the U.S. Dept. of Energy).
 !! All rights reserved.
 
 !! Redistribution and use in source and binary forms, with or without
 !! modification, are permitted provided that the following conditions are
-!! met: 
+!! met:
 
 !! (1) Redistributions of source code must retain the above copyright
 !! notice, this list of conditions and the following disclaimer.
@@ -17,7 +17,7 @@
 !! documentation and/or other materials provided with the distribution.
 
 !! (3) Neither the name of the University of California, Lawrence
-!! Berkeley National Laboratory, U.S. Dept. of Energy nor the names of    
+!! Berkeley National Laboratory, U.S. Dept. of Energy nor the names of
 !! its contributors may be used to endorse or promote products derived
 !! from this software without specific prior written permission.
 
@@ -31,9 +31,9 @@
 !! DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 !! THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 !! (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-!! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE  
+!! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 
-    
+
 SUBROUTINE SolveGasDiffuse(nx,ny,nz,nn,icomp,delt,user,amatD)
 USE crunchtype
 USE params
@@ -71,7 +71,7 @@ INTEGER(I4B)                                                          :: i
 INTEGER(I4B)                                                          :: ierr
 INTEGER(I4B)                                                          :: itsiterate
 INTEGER(I4B)                                                          :: nxyz
-     
+
 REAL(DP)                                                              :: AccumulationTerm
 REAL(DP)                                                              :: RightHandSide
 REAL(DP)                                                              :: DiagonalTerm
@@ -100,55 +100,55 @@ IF (icomp > 1) GOTO 500               !  No need to calculate matrix, since matr
 
 call MatZeroEntries(amatD,ierr)
 
-IF (nx > 1 .AND. ny ==1 .AND. nz == 1) THEN           ! 1D problem assuming jx is coordinate
+IF (nx > 1 .AND. ny == 1 .AND. nz == 1) THEN           ! 1D problem assuming jx is coordinate
 
   jy = 1
   jz = 1
   DO jx = 2,nx-1
-    j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1  
+    j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
     satgas = 1.0 - satliq(jx,jy,jz)
-    portemp = por(jx,jy,jz)    
+    portemp = por(jx,jy,jz)
     IF (activecell(jx,jy,jz) == 0) THEN
       DiagonalTerm = 1.0
-      CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)  
+      CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)
       CALL MatSetValues(amatD,1,j,1,j-1,0.0,INSERT_VALUES,ierr)
       CALL MatSetValues(amatD,1,j,1,j+1,0.0,INSERT_VALUES,ierr)
     ELSE
       AccumulationTerm = dxy(jx,jy,jz)*portemp*satgas/delt
       DiagonalTerm = bg(jx,jy,jz) + AccumulationTerm
-      CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)  
+      CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)
       CALL MatSetValues(amatD,1,j,1,j-1,ag(jx,jy,jz),INSERT_VALUES,ierr)
       CALL MatSetValues(amatD,1,j,1,j+1,cg(jx,jy,jz),INSERT_VALUES,ierr)
     END IF
   END DO
 
   jx = 1
-  j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1 
-  satgas = 1.0 - satliq(jx,jy,jz)
-  portemp = por(jx,jy,jz)   
-  IF (activecell(jx,jy,jz) == 0) THEN
-    DiagonalTerm = 1.0
-    CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)  
-    CALL MatSetValues(amatD,1,j,1,j+1,0.0,INSERT_VALUES,ierr)
-  ELSE
-    AccumulationTerm = dxy(jx,jy,jz)*portemp*satgas/delt
-    DiagonalTerm = bg(jx,jy,jz) + AccumulationTerm
-    CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)  
-    CALL MatSetValues(amatD,1,j,1,j+1,cg(jx,jy,jz),INSERT_VALUES,ierr)
-  END IF
-
-  jx = nx
-  j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1 
+  j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
   satgas = 1.0 - satliq(jx,jy,jz)
   portemp = por(jx,jy,jz)
   IF (activecell(jx,jy,jz) == 0) THEN
     DiagonalTerm = 1.0
-    CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)  
+    CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)
+    CALL MatSetValues(amatD,1,j,1,j+1,0.0,INSERT_VALUES,ierr)
+  ELSE
+    AccumulationTerm = dxy(jx,jy,jz)*portemp*satgas/delt
+    DiagonalTerm = bg(jx,jy,jz) + AccumulationTerm
+    CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)
+    CALL MatSetValues(amatD,1,j,1,j+1,cg(jx,jy,jz),INSERT_VALUES,ierr)
+  END IF
+
+  jx = nx
+  j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
+  satgas = 1.0 - satliq(jx,jy,jz)
+  portemp = por(jx,jy,jz)
+  IF (activecell(jx,jy,jz) == 0) THEN
+    DiagonalTerm = 1.0
+    CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)
     CALL MatSetValues(amatD,1,j,1,j-1,0.0,INSERT_VALUES,ierr)
   ELSE
     AccumulationTerm = dxy(jx,jy,jz)*portemp*satgas/delt
     DiagonalTerm = bg(jx,jy,jz) + AccumulationTerm
-    CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)  
+    CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)
     CALL MatSetValues(amatD,1,j,1,j-1,ag(jx,jy,jz),INSERT_VALUES,ierr)
   END IF
 
@@ -157,7 +157,7 @@ ELSE                                                !  2D problem
     jz = 1
     DO jy = 1,ny
       DO jx = 2,nx-1
-        j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1 
+        j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
         IF (activecell(jx,jy,jz) == 0) THEN
           CALL MatSetValues(amatD,1,j,1,j-1,0.0,INSERT_VALUES,ierr)
           CALL MatSetValues(amatD,1,j,1,j+1,0.0,INSERT_VALUES,ierr)
@@ -167,14 +167,14 @@ ELSE                                                !  2D problem
         END IF
       END DO
       jx = 1
-      j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1 
+      j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
       IF (activecell(jx,jy,jz) == 0) THEN
         CALL MatSetValues(amatD,1,j,1,j+1,0.0,INSERT_VALUES,ierr)
       ELSE
         CALL MatSetValues(amatD,1,j,1,j+1,cg(jx,jy,jz),INSERT_VALUES,ierr)
       END IF
       jx = nx
-      j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1 
+      j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
       IF (activecell(jx,jy,jz) == 0) THEN
         CALL MatSetValues(amatD,1,j,1,j-1,0.0,INSERT_VALUES,ierr)
       ELSE
@@ -185,7 +185,7 @@ ELSE                                                !  2D problem
     jz = 1
     DO jx = 1,nx
       DO jy = 2,ny-1
-        j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1 
+        j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
         IF (activecell(jx,jy,jz) == 0) THEN
           CALL MatSetValues(amatD,1,j,1,j-nx,0.0,INSERT_VALUES,ierr)
           CALL MatSetValues(amatD,1,j,1,j+nx,0.0,INSERT_VALUES,ierr)
@@ -195,14 +195,14 @@ ELSE                                                !  2D problem
         END IF
       END DO
       jy = 1
-      j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1 
+      j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
       IF (activecell(jx,jy,jz) == 0) THEN
         CALL MatSetValues(amatD,1,j,1,j+nx,0.0,INSERT_VALUES,ierr)
       ELSE
         CALL MatSetValues(amatD,1,j,1,j+nx,dg(jx,jy,jz),INSERT_VALUES,ierr)
       END IF
       jy = ny
-      j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1 
+      j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
       IF (activecell(jx,jy,jz) == 0) THEN
         CALL MatSetValues(amatD,1,j,1,j-nx,0.0,INSERT_VALUES,ierr)
       ELSE
@@ -214,8 +214,8 @@ ELSE                                                !  2D problem
       DO jy = 1,ny
         DO jx = 1,nx
           satgas = 1.0 - satliq(jx,jy,jz)
-          portemp = por(jx,jy,jz) 
-          j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1 
+          portemp = por(jx,jy,jz)
+          j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
           IF (activecell(jx,jy,jz) == 0) THEN
             DiagonalTerm = 1.0
             CALL MatSetValues(amatD,1,j,1,j,DiagonalTerm,INSERT_VALUES,ierr)
@@ -236,7 +236,7 @@ DO jz = 1,nz
   DO jy = 1,ny
     DO jx = 1,nx
       satgas = 1.0 - satliq(jx,jy,jz)
-      portemp = por(jx,jy,jz) 
+      portemp = por(jx,jy,jz)
       j = (jz-1)*nx*ny + (jy-1)*nx + jx - 1
       IF (activecell(jx,jy,jz) == 0) THEN
         RightHandSide = sgasn(icomp,jx,jy,jz)

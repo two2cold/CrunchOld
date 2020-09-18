@@ -94,13 +94,6 @@ IF(ls /= 0) THEN
       CALL convan(ssch,lzs,res)
       IF (res == 'n') THEN
         dgas = DNUM(ssch)
-        !!Yuchen make changes
-        !!WRITE(*,*)
-        !!WRITE(*,*) ' This is the gas diffusion: ', dgas
-        !!WRITE(*,*)
-        !!READ(*,*)
-        !!STOP
-        !!End change
       ELSE                !  An ascii string--so bag it.
         WRITE(*,*)
         WRITE(*,*) ' Cant interpret string following "gas_diffusion" '

@@ -617,6 +617,8 @@ LOCDIR   = ${CrunchTope_Dir}
 include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
 
-CrunchMain : ${OBJSF} chkopts 
+CrunchMain : ${OBJSF} chkopts
 	-${FLINKER} -o CrunchTope ${OBJSF} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${FFLAGS}
 
+clean ::
+	$(RM) CrunchTope *.o *.mod *~
